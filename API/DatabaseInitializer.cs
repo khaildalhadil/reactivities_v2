@@ -11,7 +11,7 @@ public class DatabaseInitializer
     _context = context;
     _logger = logger;
   }
-
+    
   public async Task InitializeAsync()
   {
     try

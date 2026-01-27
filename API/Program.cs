@@ -1,3 +1,5 @@
+using Application.Common;
+using Application.Queries;
 using DataAccess;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,9 +16,13 @@ builder.Services.AddDbContext<AppDbContext>(
         )
     );
 
+
 // add cors
 
 builder.Services.AddCors();
+
+builder.Services.AddMediatR(x=> x.RegisterServicesFromAssemblyContaining<GetActivityList.Handelr>());
+builder.Services.AddAutoMapper(typeof(MappingProfiles).Assembly); // or typeof(Program).Assembly
 
 var app = builder.Build();
 
