@@ -1,41 +1,27 @@
-import { Button, List, ListItem, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
-import DeleteIcon from '@mui/icons-material/Delete';
-import SendIcon from '@mui/icons-material/Send';
-import axios from "axios";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import Loayout from "./Loayout";
+import About from "./pages/About";
+import Groups from "./features/Activity/Activity";
+import Contect from "./pages/Contect";
+import Home from "./features/Activity/Home";
+import { ToastContainer } from "react-toastify";
 
 function App() {
 
-  const[data, setData] = useState<ActiviteyType[]>([]);
-
-  useEffect(()=> {
-
-    async function getDataFromServer() {
-      const res = await axios.get<ActiviteyType[]>("https://localhost:5001/api/Activities");
-      setData(res.data); 
-    }
-
-    getDataFromServer();
-
-    return () => console.log("Clean Now ... ");
-    
-  }, [])
-
   return (
     <>
-      <Typography  >All Activity</Typography>
-      <List>
-        {data.map(activity => <ListItem key={activity.id}>{activity.title}</ListItem>)}
-        <div className="flex gap-5">
-          <Button variant="outlined" className="" startIcon={<DeleteIcon />}>
-            Delete
-          </Button>
-          <Button variant="contained" endIcon={<SendIcon />}>
-            Send
-          </Button>
-        </div>
-      </List>
-      
+      <ToastContainer />
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Loayout />} path="/" >
+            <Route element={<Navigate to="/" replace />} path="/home" />
+            <Route element={<Home />} path="/"/>
+            <Route element={<About />} path="about" />
+            <Route element={<Groups />} path="group" />
+            <Route element={<Contect />} path="contect" />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     </>
   )
 }

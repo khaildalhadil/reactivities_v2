@@ -23,7 +23,7 @@ public class ActivitiesController: BaseApiController
       return NotFound();
     }
 
-    return Ok(new { length= activities.Count, Allactivities=activities});
+    return Ok(activities);
   }
 
   [HttpGet("{id}")]
