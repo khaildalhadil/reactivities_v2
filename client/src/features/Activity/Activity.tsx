@@ -3,7 +3,6 @@ import GroupPost from "./ActivityPost";
 import { getAllActivity } from "../../Services/activitys";
 // import Details from "./ActivityDetails";
 import ActivityDetails from "./ActivityDetails";
-import { useState } from "react";
 import useActiviy from "../../stores/activity.store";
 import UpSertFormActivity from "./UpSertFormActivity";
 // import { CiFilter } from "react-icons/ci";
@@ -12,8 +11,11 @@ import UpSertFormActivity from "./UpSertFormActivity";
 export default function Groups() {
 
   // const [searchParams, setSearchParams] = useSearchParams();
-  const [activityCliked, SetActivityCliked] = useState<ActiviteyType | null>();
+  // const [activityCliked, setActivityCliked] = useState<ActiviteyType | null>();
+
   const isCreateNewActivity = useActiviy((state)=> state.isCreateNewActivity);
+  const setActivityCliked = useActiviy((state)=> state.setActivityCliked);
+  const activityCliked = useActiviy((state)=> state.activityCliked);
   
 
   const {data, isLoading, isError, error} = useQuery(
@@ -26,11 +28,12 @@ export default function Groups() {
   function handleViewCliecd(id: string) {
     if (!data) return;
     const activity = data.find(activity => activity.id == id);
-    SetActivityCliked(activity);
+    if (activity == undefined || activity == null) return;
+    setActivityCliked(activity);
   }
 
   function handleAcvitityCancel() {
-    SetActivityCliked(null);
+    setActivityCliked(null);
   }
 
   // console.log(searchParams.get("filter"))
@@ -50,12 +53,11 @@ export default function Groups() {
         {/* <UpSertFormActivity id={activityCliked.id} />:  */}
 
         <div className="flex-2 relative">
-          {isCreateNewActivity && <UpSertFormActivity id={null} />}
+          {isCreateNewActivity && <UpSertFormActivity id={null} currentActiviy={null} />}
 
           {!isCreateNewActivity && activityCliked && <div className=" bg-white rounded border border-gray-200 m-4 h-fit sticky top-0">  
             <ActivityDetails 
               cancelActivityView={handleAcvitityCancel} 
-              activityCliked={activityCliked} 
               />
             </div>}
           

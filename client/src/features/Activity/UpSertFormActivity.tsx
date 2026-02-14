@@ -1,41 +1,48 @@
-import { useState } from "react";
 import useActiviy from "../../stores/activity.store";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { addActivity } from "../../Services/activitys";
+import { addActivity, updateActivity } from "../../Services/activitys";
 import { toast } from "react-toastify";
+import Loadding from "../../components/Loadding";
 // import ActivityDetails from "./ActivityDetails";
 
+import {useForm} from 'react-hook-form'
+
 type Props = {
-  id: string | null
+  id: string | null,
+  currentActiviy: ActiviteyType | null
 }
 
-export default function UpSertFormActivity({id}: Props) {
+export default function UpSertFormActivity({id, currentActiviy}: Props) {
 
-  const [title, setTitle] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [category, setCategory] = useState<string>('');
-  const [date, setDate] = useState<string>('');
-  const [city, setCity] = useState<string>('');
-  const [venue, setVenue] = useState<string>('');
-  const [isSumbit, setIsSumbit] = useState(false);
-  
+  const type: string = typeof id == "string"? "Edit": "Add";
+
+  const {register, handleSubmit, getValues, formState: {errors}} = useForm<ActiviteyType>();
   const setIsUpdateActivity = useActiviy(state=> state.setIsUpdateActivity);
-
-  const type: string = typeof id == "string"? "Edit": "Add"
   const setIsCreateNewActivity = useActiviy((state) => state.setIsCreateNewActivity);
+  const setActivityCliked = useActiviy((state)=> state.setActivityCliked);
 
   // react query 
   const queryClient = useQueryClient();
 
-  const mutation = useMutation({
+  const {mutate: addMutation, isPending: isAddingNewActiviy} = useMutation({
     mutationFn: addActivity,
     onSuccess: ()=> {
       queryClient.invalidateQueries({queryKey: ["activitys"]})
-      toast.success(`${title} Added successfully`)
+      toast.success(`${getValues().title} Added successfully`)
       setIsCreateNewActivity(false);
     },
     onError: (err) => {
       toast.error(err.message);
+    }
+  })
+
+  const {mutate: updateMuatation, isPending: isUpdatedingNewActivity} = useMutation({
+    mutationFn: updateActivity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ["activitys"]})
+      toast.success(`${getValues().title} updated successfully`);
+      setIsUpdateActivity(false);
+      setActivityCliked(null);
     }
   })
 
@@ -46,129 +53,118 @@ export default function UpSertFormActivity({id}: Props) {
     setIsCreateNewActivity(false)
     setIsUpdateActivity(false)
   }
-  
-  
-  function handleUpSert(e: React.MouseEvent<HTMLButtonElement>) {
+
+  function handleUpSert(data: ActiviteyType) {
     
-    e.preventDefault();
-    const arrayOfErrors: string[] = checkValidation();
-    setIsSumbit(true);
-    
-    if (arrayOfErrors.length > 0) {
-      return;
-    }
-    
+    const upSertObject: ActiviteyTypeToPost = data;
     if (type == "Add") {
-
-      mutation.mutate({
-        title, 
-        category,
-        city,
-        date,
-        description,
-        isCancelled: false,
-        latitude: 0,
-        longitude: 0,
-        venue,
-      })
+      
+      addMutation(upSertObject)
+    } else {
+      if (currentActiviy == null) return;
+      const updateObject: ActiviteyType = {id: currentActiviy.id, ...upSertObject}
+      setIsUpdateActivity(true);
+      updateMuatation(updateObject)
     }
   }
+  // get defaut 
+  function defalueDate(date: string | undefined): string {
+    if (date == null) return '';
+    return date?.split('T')[0]
 
-  function checkValidation(): string[] {
-
-    const allError: Array<string> = [];
-
-    console.log(date);
-
-    // if (title.length <= 2) allError[0] = "name should be more then 2 char";
-    if (title.length <= 2) allError.push("title should be more then 2 char");
-    if (description.length <= 2) allError.push("description should be more then 2 char");
-    if (category.length <= 2) allError.push("category should be more then 2 char");
-    if (city.length <= 2) allError.push("city should be more then 2 char");
-    if (venue.length <= 2) allError.push("venue should be more then 2 char");
-    if (date == "") allError.push("enter the date please");
-
-    return allError;
   }
+
+  const getTodayDate = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    // Months are zero-indexed, so add 1
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const day = today.getDate().toString().padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  };
+
+  if (isAddingNewActiviy || isUpdatedingNewActivity) return <Loadding />
 
   return (
-    <form className="flex flex-col gap-4 p-2 bg-white m-3 shadow rounded sticky top-0">
+    <form 
+      className="flex flex-col gap-4 p-2 bg-white m-3 shadow rounded sticky top-0" 
+      onSubmit={handleSubmit(handleUpSert)} >
 
       <div className="flex flex-col">
+        <label htmlFor="">name</label>
         <input 
-          value={title} 
-          onChange={(e) => setTitle(e.target.value)} 
+          // value={title} 
+          // onChange={(e) => setTitle(e.target.value)} 
+          {...register('title', {required: 'this field required'})}
           name="title" 
-          defaultValue={""} 
-          className={`border  rounded block p-2 focus:outline-gray-200 ${isSumbit && title.length < 2 ? 'border-red-300': 'border-gray-200'}`}
+          defaultValue={currentActiviy?.title} 
+          className={`border text-gray-500 rounded block p-2 focus:outline-gray-200 ${errors.title ? 'border-red-300': 'border-gray-200'}`}
           type="text" 
           placeholder="Title" />
-        {isSumbit && title.length <= 2 && <span className="text-red-300 text-sm">title should be more then 2 char</span>}
+        {errors.title && <span className="text-red-300 text-sm">{errors.title.message}</span>}
         
       </div>
       
       <div className="flex flex-col">
+        <label htmlFor="">description</label>
         <textarea 
-          value={description} 
-          onChange={(e) => setDescription(e.target.value)} 
+          {...register('description', {required: 'this field required'})}
           name="description" 
-          defaultValue={""} 
-          className={`border rounded block p-2 focus:outline-gray-200 ${isSumbit && description.length < 2 ? 'border-red-300': 'border-gray-200'}`}
+          defaultValue={id? currentActiviy?.description: ''} 
+          className={`border text-gray-500 rounded block p-2 focus:outline-gray-200 ${errors.description ? 'border-red-300': 'border-gray-200'}`}
           placeholder="Description" ></textarea>
-        {isSumbit && description.length <= 2 && <span className="text-red-300 text-sm">description should be more then 2 char</span>}
+        {errors.description && <span className="text-red-300 text-sm">{errors.description.message}</span>}
       </div>
       
       <div className="flex flex-col">
+        <label htmlFor="">category</label>
         <input 
-          value={category} 
-          onChange={(e) => setCategory(e.target.value)} 
+          {...register('category', {required: 'this field required'})}
           name="category" 
-          defaultValue={""} 
-          className={`border  rounded block p-2 focus:outline-gray-200 ${isSumbit && category.length < 2 ? 'border-red-300': 'border-gray-200'}`}
+          defaultValue={id? currentActiviy?.category: ''} 
+          className={`border  rounded block p-2 focus:outline-gray-200 ${errors.category ? 'border-red-300': 'border-gray-200'}`}
           type="text" 
           placeholder="Category" />
 
-        {isSumbit && category.length <= 2 && <span className="text-red-300 text-sm">category should be more then 2 char</span>}
-
+        {errors.category && <span className="text-red-300 text-sm">{errors.category.message}</span>}
       </div>
       
       <div className="flex flex-col"> 
+        <label htmlFor="">date</label>
         <input 
-          value={date} 
-          onChange={(e) => setDate(e.target.value)} 
-          name="date" 
-          defaultValue={""} 
-          className={`border  rounded block p-2 focus:outline-gray-200 ${isSumbit && date.length < 2 ? 'border-red-300': 'border-gray-200'}`}
-          type="date" 
+          {...register('date', {required: 'this field required'})}
+            name="date" 
+            defaultValue={id ? defalueDate(currentActiviy?.date): getTodayDate()}
+            className={`border  rounded block p-2 focus:outline-gray-200 ${errors.date ? 'border-red-300': 'border-gray-200'}`}
+            type="date" 
           />
-        
-        {isSumbit && date.length <= 2 && <span className="text-red-300 text-sm">date is required</span>}
+        {errors.date && <span className="text-red-300 text-sm">{errors.date.message}</span>}
       </div>
 
       <div className="flex flex-col"> 
+        <label htmlFor="">city</label>
         <input 
-          value={city} 
-          onChange={(e) => setCity(e.target.value)} 
+          {...register('city', {required: 'this field required'})}
           name="city" 
-          defaultValue={""} 
-          className={`border rounded block p-2 focus:outline-gray-200 ${isSumbit && city.length < 2 ? 'border-red-300': 'border-gray-200'}`}
+          className={`border rounded block p-2 focus:outline-gray-200 ${errors.city ? 'border-red-300': 'border-gray-200'}`}
           type="text" 
+          defaultValue={id? currentActiviy?.city: ''} 
           placeholder="City" />
-          {isSumbit && city.length <= 2 && <span className="text-red-300 text-sm">city is required</span>}
-
-
+          {errors.city && <span className="text-red-300 text-sm">{errors.city.message}</span>}
       </div>
 
       <div className="flex flex-col"> 
+        <label htmlFor="">venue</label>
         <input 
-          value={venue}
-          onChange={(e) => setVenue(e.target.value)} 
+          {...register('venue', {required: 'this field required'})}
           name="venue" 
-          defaultValue={""} className={`border rounded block p-2 focus:outline-gray-200 ${isSumbit && venue.length < 2 ? 'border-red-500': 'border-gray-200'}`}
+          defaultValue={id? currentActiviy?.venue: ''} 
+          className={`border rounded block p-2 focus:outline-gray-200 ${errors.venue ? 'border-red-500': 'border-gray-200'}`}
           type="text" 
           placeholder="Venue" />
 
-        {isSumbit && venue.length <= 2 && <span className="text-red-300 text-sm">venue is required</span>}
+        {errors.venue && <span className="text-red-300 text-sm">{errors.venue.message}</span>}
       </div>
 
       <div className="flex gap-2 justify-end">
@@ -177,7 +173,8 @@ export default function UpSertFormActivity({id}: Props) {
           className="cursor-pointer border border-gray-300 rounded p-1">CANCEL</button>
         <button 
           className="cursor-pointer bg-green-800 px-5 rounded text-white"
-          onClick={(e)=> handleUpSert(e)}>{type}</button>
+          type="submit"
+        >{type}</button>
       </div>
       
     </form>

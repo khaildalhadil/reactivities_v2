@@ -25,6 +25,17 @@ export async function addActivity(activity:ActiviteyTypeToPost): Promise<Activit
   }
 }
 
+export async function updateActivity(activity:ActiviteyType): Promise<ActiviteyType | null> {
+  console.log(activity);
+  try {
+    const res = await apiClient.put<ActiviteyType>("/Activities", activity);
+    return res.data;
+  } catch(err ) {
+    console.log(err);
+    return null;
+  }
+}
+
 export async function deleteActivity(id: string) {
   try {
     await apiClient.delete<string>(`/Activities/${id}`);

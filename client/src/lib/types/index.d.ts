@@ -30,7 +30,9 @@ type ActivityCardProps = {
 
 type ActivityUIState = {
   isCreateNewActivity: boolean,
-  setIsCreateNewActivity: (boolean) => void;
+  setIsCreateNewActivity: (boolean) => void,
   isUpdateActivity: boolean,
-  setIsUpdateActivity: (boolean) => void;
+  activityCliked: ActiviteyType | null,
+  setActivityCliked: (a: ActiviteyType | null) => void,
+  setIsUpdateActivity: (boolean) => void,
 }
