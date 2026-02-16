@@ -5,12 +5,16 @@ const useActiviy = create<ActivityUIState>()(
   devtools((set) => 
     (
       {
+        activityCliked: null,
         isCreateNewActivity: false,
         isUpdateActivity: false,
-        activityCliked: null,
+        isopenToDelete: false,
+        idToDelete: null,
+        setIdToDelete: (id: string | null) => set(() => ({idToDelete: id})),
         setActivityCliked: (state: ActiviteyType | null) => set(()=> ({activityCliked: state})),
         setIsCreateNewActivity: (bool: boolean) => set(()=> ({isCreateNewActivity: bool})),
-        setIsUpdateActivity: (bool: boolean) => set(()=> ({isUpdateActivity: bool}))
+        setIsUpdateActivity: (bool: boolean) => set(()=> ({isUpdateActivity: bool})),
+        setIsOpenToDelete: (bool: boolean) => set(()=> ({isopenToDelete: bool}))
       }
     )
   )

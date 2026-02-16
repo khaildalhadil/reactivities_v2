@@ -1,11 +1,8 @@
 import useActiviy from "../../stores/activity.store";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { addActivity, updateActivity } from "../../Services/activitys";
-import { toast } from "react-toastify";
 import Loadding from "../../components/Loadding";
 // import ActivityDetails from "./ActivityDetails";
-
-import {useForm} from 'react-hook-form'
+import useActivities from "../../lib/hooks/useActivities";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
   id: string | null,
@@ -16,62 +13,43 @@ export default function UpSertFormActivity({id, currentActiviy}: Props) {
 
   const type: string = typeof id == "string"? "Edit": "Add";
 
-  const {register, handleSubmit, getValues, formState: {errors}} = useForm<ActiviteyType>();
   const setIsUpdateActivity = useActiviy(state=> state.setIsUpdateActivity);
-  const setIsCreateNewActivity = useActiviy((state) => state.setIsCreateNewActivity);
-  const setActivityCliked = useActiviy((state)=> state.setActivityCliked);
+  // const setActivityCliked = useActiviy((state)=> state.setActivityCliked);
+  const navigate = useNavigate();
 
-  // react query 
-  const queryClient = useQueryClient();
-
-  const {mutate: addMutation, isPending: isAddingNewActiviy} = useMutation({
-    mutationFn: addActivity,
-    onSuccess: ()=> {
-      queryClient.invalidateQueries({queryKey: ["activitys"]})
-      toast.success(`${getValues().title} Added successfully`)
-      setIsCreateNewActivity(false);
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    }
-  })
-
-  const {mutate: updateMuatation, isPending: isUpdatedingNewActivity} = useMutation({
-    mutationFn: updateActivity,
-    onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ["activitys"]})
-      toast.success(`${getValues().title} updated successfully`);
-      setIsUpdateActivity(false);
-      setActivityCliked(null);
-    }
-  })
-
-  // get current edit activity if id it here
-  
-  function handleCancel(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault()
-    setIsCreateNewActivity(false)
-    setIsUpdateActivity(false)
-  }
+  const {
+    errors, 
+    // getValues, 
+    handleSubmit, 
+    isUpdatedingNewActivity, 
+    register, 
+    updateMuatation,
+    addMutation,
+    isAddingNewActiviy
+  } = useActivities();
 
   function handleUpSert(data: ActiviteyType) {
     
     const upSertObject: ActiviteyTypeToPost = data;
+
     if (type == "Add") {
       
       addMutation(upSertObject)
+      navigate("/activities");
+
     } else {
+
       if (currentActiviy == null) return;
       const updateObject: ActiviteyType = {id: currentActiviy.id, ...upSertObject}
       setIsUpdateActivity(true);
       updateMuatation(updateObject)
+
     }
   }
   // get defaut 
   function defalueDate(date: string | undefined): string {
     if (date == null) return '';
     return date?.split('T')[0]
-
   }
 
   const getTodayDate = (): string => {
@@ -169,8 +147,9 @@ export default function UpSertFormActivity({id, currentActiviy}: Props) {
 
       <div className="flex gap-2 justify-end">
         <button 
-          onClick={(e) => handleCancel(e)}
-          className="cursor-pointer border border-gray-300 rounded p-1">CANCEL</button>
+          className="px-2 py-1 bg-gray-300 rounded cursor-pointer" 
+          type="button"
+          onClick={() => navigate(-1)}>Back</button>
         <button 
           className="cursor-pointer bg-green-800 px-5 rounded text-white"
           type="submit"

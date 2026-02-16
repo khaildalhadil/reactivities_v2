@@ -1,38 +1,18 @@
-import { useState } from "react";
 import { CiClock2, CiLocationOn } from "react-icons/ci";
 import { MdDeleteOutline } from "react-icons/md";
-import Modal from "../../components/Modal";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteActivity } from "../../Services/activitys";
-import { toast } from "react-toastify";
+import useActiviy from "../../stores/activity.store";
+import { Link } from "react-router-dom";
 
 
-export default function GroupPost({ActiviteyType, showTheView}: ActivityCardProps){
+export default function GroupPost({ActiviteyType}: ActivityCardProps){
   
-  const [isopenToDelete, setIsOpenToDelete] = useState(false);
-
-  const queryClient = useQueryClient();
-
-  const mutation = useMutation({
-    mutationKey: ["activitys"],
-    mutationFn: deleteActivity,
-
-    onSuccess: () =>{
-      queryClient.invalidateQueries({queryKey: ["activitys"]});
-      toast.success(`${ActiviteyType.title} deleted successfully`);
-      setIsOpenToDelete(false);
-    }
-  })
-
-  function handleDeleteActivity() {
-    mutation.mutate(ActiviteyType.id);
-  }
+  const setIsOpenToDelete = useActiviy((state) => state.setIsOpenToDelete);
+  const setIdToDelete = useActiviy((state) => state.setIdToDelete);
 
   return (
+    <>
     <div className="flex flex-col mt-10" id={ActiviteyType.id}>
-      
       <p className="bg-blue-400 p-3 w-fit rounded-e-2xl font-bold text-white">{ActiviteyType.date.split("T")[0]}</p>
-    
         <div className="rounded shadow border border-gray-300 mt-2">
           <div className="border-b border-gray-400 p-2 flex justify-between">
             <div className="flex items-center gap-5">
@@ -44,7 +24,10 @@ export default function GroupPost({ActiviteyType, showTheView}: ActivityCardProp
             </div>
             <div>
               <MdDeleteOutline 
-                onClick={()=> setIsOpenToDelete(true)}
+                onClick={()=> {
+                  setIsOpenToDelete(true)
+                  setIdToDelete(ActiviteyType.id)
+                }}
                 className="text-4xl text-red-500 hover:bg-gray-100 rounded-full p-1 cursor-pointer" />
             </div>
           </div>
@@ -67,25 +50,13 @@ export default function GroupPost({ActiviteyType, showTheView}: ActivityCardProp
 
           <div className="flex justify-between p-3">
             <p>{ActiviteyType.description}</p>
-            <button 
-              onClick={()=> showTheView(ActiviteyType.id)}
+            <Link to={`/activities/${ActiviteyType.id}`}
               className="bg-blue-500 p-1 px-3 rounded-lg text-white cursor-pointer">
-                View</button>
+                View</Link>
           </div>
-
         </div>
-
-
-        {
-          isopenToDelete && <Modal setIsOpen={setIsOpenToDelete}>
-            <p className="text-center text-2xl font-bold mt-10 text-gray-700">Do you want to delet {ActiviteyType.title} ?</p>
-            <div className="text-center mt-10">
-              <button 
-                onClick={handleDeleteActivity}
-                className="bg-red-500 px-2 py-1 rounded text-gray-100 font-bold cursor-pointer" >Delete</button>
-            </div>
-          </Modal>
-        }
     </div>
+
+    </>
   )
 }

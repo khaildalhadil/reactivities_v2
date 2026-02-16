@@ -26,13 +26,18 @@ type ActiviteyTypeToPost = {
 type ActivityCardProps = {
   ActiviteyType: ActiviteyType
   showTheView: (id: string)=> void
+  handleDeleteActivity: (id: string) => void
 }
 
 type ActivityUIState = {
   isCreateNewActivity: boolean,
+  isopenToDelete: boolean,
+  idToDelete: string | null,
   setIsCreateNewActivity: (boolean) => void,
+  setIsOpenToDelete: (boolean) => void,
   isUpdateActivity: boolean,
   activityCliked: ActiviteyType | null,
   setActivityCliked: (a: ActiviteyType | null) => void,
   setIsUpdateActivity: (boolean) => void,
+  setIdToDelete: (boolean) => void;
 }
